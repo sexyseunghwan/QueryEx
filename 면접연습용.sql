@@ -317,70 +317,113 @@ SELECT MAX(LENGTH(FIRST_NAME || LAST_NAME)) FROM EMPLOYEES;
 --57. employees. last_name이 5자 이상인 사람들은 first_name이 몇글자?
 SELECT LENGTH(FIRST_NAME),FIRST_NAME FROM EMPLOYEES WHERE LENGTH(LAST_NAME) >= 5;
 
---여기서부터 좀 많이 틀림...
-
 --58. tbldiary. 다이어리를 작성한 날짜가 총 며칠분이며, 날씨가 맑음, 흐림, 비가 온 날이 각각 며칠이었는지?
+SELECT * FROM TBLDIARY;
+
 SELECT 
-    COUNT(*) AS "전체",
+    COUNT(*) AS "총 날짜",
     COUNT(DECODE(WEATHER,'맑음',1)) AS "맑음",
     COUNT(DECODE(WEATHER,'흐림',1)) AS "흐림",
-    COUNT(DECODE(WEATHER,'비',1)) AS "비"
-FROM TBLDIARY; 
-
+    COUNT(DECODE(WEATHER,'비',1)) AS "비" 
+FROM TBLDIARY;
 
 --59. tbldiary. 공부와 관련된 작성 게시물이 총 몇개인가?('오라클', '자바', '코딩'이 들어간 게시물 개수)
 SELECT * FROM TBLDIARY;
 
-SELECT
-    COUNT(*)    
+SELECT 
+    COUNT(*) 
 FROM TBLDIARY
 WHERE INSTR(SUBJECT,'오라클') > 0 OR INSTR(SUBJECT,'자바') > 0 OR INSTR(SUBJECT,'코딩') > 0;
 
 
---60. fine_dust_standard + fine_dust. 강남구의 미세먼지(PM10) 상태가 좋음, 보통, 나쁨, 매우나쁨이 각각 며칠이었는지? 0 30, 31 50, 51, 70, 71 999
-SELECT * FROM FINE_DUST;
+--60. fine_dust_standard + fine_dust. 강남구의 미세먼지(PM10) 상태가 좋음, 보통, 나쁨, 매우나쁨이 각각 며칠이었는지? 0 30, 31 50, 51, 70, 71 999(** 해당 쿼리문을 자꾸 틀림)
+SELECT * FROM fine_dust;
 
-SELECT 
-    COUNT(*) AS "전체",
+SELECT
     COUNT(CASE WHEN PM10 BETWEEN 0 AND 30 THEN 1 END) AS "좋음",
     COUNT(CASE WHEN PM10 BETWEEN 31 AND 50 THEN 1 END) AS "보통",
     COUNT(CASE WHEN PM10 BETWEEN 51 AND 70 THEN 1 END) AS "나쁨",
-    COUNT(CASE WHEN PM10 BETWEEN 71 AND 999 THEN 1 END) AS "매우나쁨" 
+    COUNT(CASE WHEN PM10 BETWEEN 71 AND 999 THEN 1 END) AS "매우나쁨"
 FROM FINE_DUST
 WHERE MEA_STATION = '강남구';
 
---61. lotto_detail. 1인당 당첨금이 가장 많은 순으로 가져오시오. (1등 당첨자 수, 1인 당첨금, 총 당첨금)
-SELECT * FROM lotto_detail;
 
-SELECT 
-    WIN_PERSON_NO,
-    WIN_MONEY,
-    WIN_MONEY*WIN_PERSON_NO
-FROM lotto_detaiL 
+--61. lotto_detail. 1인당 당첨금이 가장 많은 순으로 가져오시오. (1등 당첨자 수, 1인 당첨금, 총 당첨금)
+SELECT * FROM LOTTO_DETAIL;
+
+SELECT
+    WIN_PERSON_NO AS "1등 당첨자 수",
+    WIN_MONEY AS "1인 당첨금",
+    WIN_MONEY * WIN_PERSON_NO AS "총 당첨금"
+FROM LOTTO_DETAIL
 ORDER BY WIN_MONEY DESC;
 
 --62. tblsubway. 2017년 4월 2일에 승차한 승객수가 가장 많은 순으로 가져오시오.
---방법 1
+SELECT * FROM TBLSUBWAY;
+
 SELECT 
     * 
 FROM TBLSUBWAY
-WHERE TO_CHAR(BOARDINGDATE,'YYYY/MM/DD') = '2017/04/02'
+WHERE BOARDINGDATE = '17/04/02'
 ORDER BY PASSENGERNUMBER DESC;
 
---방법2
+--63. tblzoo. 다리가 있고(leg) 날지 못하는(fly) 동물들의 종(family)을 가져오시오.
+SELECT * FROM TBLZOO;
+
 SELECT 
-    *
-FROM TBLSUBWAY
-WHERE BOARDINGDATE = '2017-04-02'
-ORDER BY passengernumber DESC;
+    DISTINCT FAMILY
+FROM TBLZOO
+WHERE FLY = 'n' AND LEG > 0;
 
 
+--65. tbltodo. 오전(0~11시)과 오후(12~23시)에 끝마친(completedate) 할일들의 개수를 각각 가져오시오.(***)
+SELECT * FROM TBLTODO;
 
+SELECT 
+    TO_CHAR(COMPLETEDATE,'HH24')
+FROM TBLTODO;
 
+SELECT
+    COUNT(CASE WHEN COMPLETEDATE IS NOT NULL THEN 1 END) AS "총한일",
+    COUNT(CASE WHEN TO_CHAR(COMPLETEDATE,'HH24') BETWEEN 0 AND 11 THEN 1 END) AS "오전",
+    COUNT(CASE WHEN TO_CHAR(COMPLETEDATE,'HH24') BETWEEN 12 AND 23 THEN 1 END) AS "오후"
+FROM TBLTODO;
 
+--66. tbladdressbook. 구글 메일, 다음 메일, 네이버 메일을 사용하는 사람이 각각 몇명인지?
+SELECT * FROM tbladdressbook;
 
+--이런방식은 사실 100% 안전한 방법이라고 보기 어려움
+SELECT
+    COUNT(CASE WHEN INSTR(EMAIL,'gmail') > 0 THEN 1 END) AS "구글",
+    COUNT(CASE WHEN INSTR(EMAIL,'daum') > 0 THEN 1 END) AS "다음",
+    COUNT(CASE WHEN INSTR(EMAIL,'naver') > 0 THEN 1 END) AS "네이버"
+FROM TBLADDRESSBOOK;
 
+--해당 방식이 100% 안전한 방식이라고 볼 수 있음.
+SELECT
+    SUBSTR(EMAIL,INSTR(EMAIL,'@')+1)
+FROM TBLADDRESSBOOK;
+--위의 쿼리문이 SUBSTR 로 @ 뒷자리 이메일만 뽑아준 형태
 
+SELECT
+    COUNT(CASE WHEN SUBSTR(EMAIL,INSTR(EMAIL,'@')+1) = 'gmail.com' THEN 1 END) AS "구글",
+    COUNT(CASE WHEN SUBSTR(EMAIL,INSTR(EMAIL,'@')+1) = 'daum.net' THEN 1 END) AS "다음",
+    COUNT(CASE WHEN SUBSTR(EMAIL,INSTR(EMAIL,'@')+1) = 'naver.com' THEN 1 END) AS "네이버"
+FROM TBLADDRESSBOOK;
+
+--67. tbladdressbook. 서울 이외의 지역에서 사는 사람들이 총 몇명인지?
+--67-1. 첫번째 방법
+SELECT * FROM TBLADDRESSBOOK;
+
+SELECT
+    COUNT(CASE WHEN SUBSTR(ADDRESS,1,2) <> '서울' THEN 1 END) AS "비서울"
+FROM TBLADDRESSBOOK;
+
+--67-2. 두번째 방법
+SELECT
+    COUNT(*)
+FROM TBLADDRESSBOOK 
+WHERE INSTR(ADDRESS,'서울') = 0;
 
 
 
